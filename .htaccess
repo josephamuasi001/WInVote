@@ -1,0 +1,19 @@
+Options -Indexes
+DirectoryIndex index.php index.html
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^(?:config|src|sql|tests|storage|\.git)(?:/|$) - [F,END,NC]
+  RewriteRule ^index\.html$ index.php [R=302,L,NC]
+  RewriteRule ^events\.html$ events.php [R=302,L,NC]
+  RewriteRule ^(?:event-details|contestant)\.html$ events.php [R=302,L,NC]
+  RewriteRule ^results\.html$ results.php [R=302,L,NC]
+  RewriteRule ^vote\.html$ vote.php [R=302,L,NC]
+  RewriteRule ^nominations\.html$ nominate.php [R=302,L,NC]
+  RewriteRule ^login\.html$ auth.php?action=login [R=302,L,NC]
+  RewriteRule ^register\.html$ auth.php?action=register [R=302,L,NC]
+</IfModule>
+
+<FilesMatch "^\.">
+  Require all denied
+</FilesMatch>
