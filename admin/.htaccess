@@ -1,0 +1,10 @@
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^.*\.html$ ../auth.php?action=login [R=302,L]
+</IfModule>
+
+  <FilesMatch "^_">
+    Require all denied
+  </FilesMatch>
