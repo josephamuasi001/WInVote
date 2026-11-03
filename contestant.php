@@ -40,11 +40,7 @@ try {
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <nav class="public-nav" style="display:flex"><a href="events.php">Explore events</a><a href="results.php">Results</a><a href="nominate.php">Nominations</a></nav>
-    <div class="nav-actions"><a class="btn btn-secondary btn-sm" href="auth.php?action=login">Log in</a><a class="btn btn-primary btn-sm" href="auth.php?action=register">Create account</a></div>
-  </div></header>
+  <?= render_public_header(is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : null, csrf_token(), '') ?>
   <main class="content-section"><div class="container">
     <?php if ($errorMessage !== null): ?>
       <section class="panel" role="alert"><h1>Nominee unavailable</h1><p><?= public_contestant_escape($errorMessage) ?></p><a class="btn btn-secondary" href="events.php">Explore events</a></section>
