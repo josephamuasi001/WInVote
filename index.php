@@ -53,32 +53,7 @@ $user = $_SESSION['user'] ?? null;
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <button class="mobile-menu" type="button" aria-label="Toggle navigation" data-action="public-menu">☰</button>
-    <nav class="public-nav">
-      <a href="events.php">Explore events</a>
-      <a href="results.php">Results</a>
-      <a href="nominate.php">Nominations</a>
-      <a href="about.html">About</a>
-    </nav>
-    <div class="nav-actions">
-      <?php if (is_array($user)): ?>
-        <?php
-          $roles = is_array($user['roles'] ?? null) ? $user['roles'] : [];
-          $roleLabel = in_array('super_admin', $roles, true)
-              ? 'Super admin'
-              : (in_array('organizer', $roles, true) ? 'Organizer' : 'WInVote account');
-        ?>
-        <?= render_account_menu($user, csrf_token(), '', $roleLabel) ?>
-        <?php if (in_array('super_admin', $roles, true)): ?><a class="btn btn-secondary btn-sm" href="admin/index.php">Admin</a><?php endif; ?>
-        <?php if (in_array('organizer', $roles, true) && ($user['organizer_status'] ?? null) === 'approved'): ?><a class="btn btn-secondary btn-sm" href="organizer/events.php">Manage events</a><?php endif; ?>
-      <?php else: ?>
-        <a class="btn btn-secondary btn-sm" href="auth.php?action=login">Log in</a>
-        <a class="btn btn-primary btn-sm" href="auth.php?action=register">Create account</a>
-      <?php endif; ?>
-    </div>
-  </div></header>
+  <?= render_public_header(is_array($user) ? $user : null, csrf_token(), '') ?>
   <main>
     <section class="hero"><div class="container hero-grid"><div>
       <span class="eyebrow">A better way to celebrate every voice</span>
@@ -132,10 +107,5 @@ $user = $_SESSION['user'] ?? null;
     </div></section>
   </main>
   <footer class="site-footer"><div class="container"><div class="footer-bottom"><span>WInVote · Every voice deserves a fair way to be heard.</span><a href="support.html">Help & support</a></div></div></footer>
-  <script>
-    document.querySelector("[data-action='public-menu']")?.addEventListener("click", () => {
-      document.querySelector(".public-nav")?.classList.toggle("open");
-    });
-  </script>
 </body>
 </html>
