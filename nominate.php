@@ -76,10 +76,7 @@ $previous = static fn (string $key): string => nomination_public_escape((string)
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <nav class="public-nav" style="display:flex"><a href="events.php">Explore events</a><a href="results.php">Results</a><a href="support.html">Support</a></nav>
-  </div></header>
+  <?= render_public_header(is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : null, csrf_token(), 'nominate.php') ?>
   <main><section class="page-hero"><div class="container"><div class="breadcrumb">HOME / NOMINATIONS</div><h1>Know someone who deserves the spotlight?</h1><p>Share a nomination for an event that is currently accepting applications. An organizer will review it before any contestant profile is created.</p></div></section>
     <section class="content-section"><div class="container detail-layout">
       <section class="form-card">
