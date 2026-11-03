@@ -31,7 +31,18 @@ function posted_string(string $name): string
     return is_string($value) ? $value : '';
 }
 
+function valid_continue_url(mixed $value): string
+{
+    if (!is_string($value)
+        || preg_match('/^vote\.php\?event_id=[1-9]\d*&category_id=[1-9]\d*&contestant_id=[1-9]\d*$/D', $value) !== 1) {
+        return '';
+    }
+
+    return $value;
+}
+
 $action = $_GET['action'] ?? 'login';
+$continueUrl = valid_continue_url($_POST['continue'] ?? $_GET['continue'] ?? '');
 if ($action === 'status' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     header('Content-Type: application/json; charset=utf-8');
     header('Cache-Control: no-store, private');
@@ -145,6 +156,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if (in_array('super_admin', $roles, true)) {
                 redirect_to('admin/index.php');
             }
+            if ($continueUrl !== '') {
+                redirect_to($continueUrl);
+            }
             $successMessage = 'You are signed in.';
         }
     } catch (PDOException $exception) {
@@ -172,13 +186,7 @@ $description = $isRegister
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <nav class="public-nav" style="display:flex"><a href="events.php">Explore events</a><a href="results.php">Results</a><a href="about.html">About</a></nav>
-    <?php if ($signedInUser !== null): ?>
-      <?= render_account_menu($signedInUser, csrf_token(), '', 'WInVote account') ?>
-    <?php endif; ?>
-  </div></header>
+  <?= render_public_header(is_array($signedInUser) ? $signedInUser : null, csrf_token(), '') ?>
   <main class="content-section">
     <div class="container">
       <div class="form-shell">
@@ -208,6 +216,7 @@ $description = $isRegister
           <?php else: ?>
             <form method="post" action="auth.php?action=<?= $isRegister ? 'register' : 'login' ?>">
               <input type="hidden" name="_token" value="<?= escape_html(csrf_token()) ?>">
+              <?php if ($continueUrl !== ''): ?><input type="hidden" name="continue" value="<?= escape_html($continueUrl) ?>"><?php endif; ?>
               <?php if ($isRegister): ?>
                 <div class="field"><label for="full_name">Full name</label><input class="input" id="full_name" name="full_name" autocomplete="name" required maxlength="160" value="<?= escape_html(posted_string('full_name')) ?>"></div>
               <?php endif; ?>
@@ -225,7 +234,7 @@ $description = $isRegister
               <?php if ($isRegister): ?>
                 Already have an account? <a class="text-link" href="auth.php?action=login">Log in</a>
               <?php else: ?>
-                New to WInVote? <a class="text-link" href="auth.php?action=register">Create an account</a>
+                New to WInVote? <a class="text-link" href="auth.php?action=register<?= $continueUrl === '' ? '' : '&amp;continue=' . rawurlencode($continueUrl) ?>">Create an account</a>
               <?php endif; ?>
             </p>
           <?php endif; ?>
