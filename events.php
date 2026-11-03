@@ -29,17 +29,7 @@ try {
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <button class="mobile-menu" aria-label="Toggle navigation" data-action="public-menu">☰</button>
-    <nav class="public-nav">
-      <a href="events.php" aria-current="page">Explore events</a>
-      <a href="results.php">Results</a>
-      <a href="nominate.php">Nominations</a>
-      <a href="about.html">About</a>
-    </nav>
-    <div class="nav-actions"><a class="btn btn-secondary btn-sm" href="auth.php?action=login">Log in</a><a class="btn btn-primary btn-sm" href="auth.php?action=register">Create account</a></div>
-  </div></header>
+  <?= render_public_header(is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : null, csrf_token(), 'events.php') ?>
   <main>
     <section class="page-hero"><div class="container"><div class="breadcrumb">HOME / EVENTS</div><h1>Find your next moment.</h1><p>Explore approved events, support nominees, and see results when organizers make them public.</p></div></section>
     <section class="content-section"><div class="container">
@@ -98,7 +88,6 @@ try {
                 </div>
                 <div class="filter-row event-card-actions">
                   <a class="btn btn-secondary btn-sm" href="event.php?event_id=<?= (int) $event['id'] ?>">Details</a>
-                  <?php if ($event['public_status'] === 'Live'): ?><a class="btn btn-primary btn-sm" href="vote.php?event_id=<?= (int) $event['id'] ?>">Vote now</a><?php endif; ?>
                   <?php if ((int) $event['has_public_results'] === 1): ?><a class="btn btn-secondary btn-sm" href="results.php?event_id=<?= (int) $event['id'] ?>">View results</a><?php endif; ?>
                 </div>
               </div>
@@ -110,34 +99,5 @@ try {
     </div></section>
   </main>
   <footer class="site-footer"><div class="container"><div class="footer-bottom"><span>© 2026 WInVote · Every voice deserves a fair way to be heard.</span><a href="support.html">Help & support</a></div></div></footer>
-  <script>
-    document.querySelector("[data-action='public-menu']")?.addEventListener("click", () => {
-      document.querySelector(".public-nav")?.classList.toggle("open");
-    });
-    const escapeHtml = value => String(value).replace(/[&<>"']/g, character =>
-      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[character]
-    );
-    fetch("auth.php?action=status", {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" }
-    })
-      .then(response => response.ok ? response.json() : Promise.reject(new Error(`Account status request failed (${response.status}).`)))
-      .then(status => {
-        if (!status.authenticated || !status.user) return;
-        const user = status.user;
-        const roles = Array.isArray(user.roles) ? user.roles : [];
-        const isApprovedOrganizer = roles.includes("organizer") && user.organizer_status === "approved";
-        const role = roles.includes("super_admin")
-          ? "Super admin"
-          : roles.includes("organizer")
-            ? (isApprovedOrganizer ? "Approved organizer" : "Organizer · approval pending")
-            : "WInVote account";
-        const initial = Array.from(user.full_name || "W").slice(0, 1).join("").toUpperCase();
-        const actions = document.querySelector(".nav-actions");
-        if (!actions) return;
-        actions.innerHTML = `<details class="account-menu"><summary class="account-trigger"><span class="user-avatar" aria-hidden="true">${escapeHtml(initial)}</span><span class="account-trigger-name">${escapeHtml(user.full_name)}</span><span aria-hidden="true">⌄</span></summary><div class="account-dropdown"><strong>${escapeHtml(user.full_name)}</strong><span class="account-email">${escapeHtml(user.email)}</span><span class="account-role">${role}</span>${isApprovedOrganizer ? '<a href="organizer/events.php">Manage events</a>' : ''}<a href="auth.php?action=account">Account details</a><form method="post" action="auth.php?action=logout"><input type="hidden" name="_token" value="${escapeHtml(status.csrf_token || "")}"><button type="submit">Sign out</button></form></div></details>`;
-      })
-      .catch(error => console.error("WInVote account navigation could not be updated:", error));
-  </script>
 </body>
 </html>
