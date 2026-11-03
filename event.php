@@ -52,12 +52,7 @@ $canVote = is_array($event)
   <link rel="stylesheet" href="assets/css/app.css">
 </head>
 <body>
-  <header class="site-header"><div class="container nav-inner">
-    <a class="brand" href="index.php"><span class="brand-mark">W</span><span>WIn<em>Vote</em></span></a>
-    <button class="mobile-menu" type="button" aria-label="Toggle navigation" data-action="public-menu">☰</button>
-    <nav class="public-nav"><a href="events.php">Explore events</a><a href="results.php">Results</a><a href="nominate.php">Nominations</a><a href="about.html">About</a></nav>
-    <div class="nav-actions"><a class="btn btn-secondary btn-sm" href="auth.php?action=login">Log in</a><a class="btn btn-primary btn-sm" href="auth.php?action=register">Create account</a></div>
-  </div></header>
+  <?= render_public_header(is_array($_SESSION['user'] ?? null) ? $_SESSION['user'] : null, csrf_token(), '') ?>
   <main class="content-section"><div class="container">
     <?php if ($errorMessage !== null): ?>
       <section class="panel" role="alert"><h1>Event unavailable</h1><p><?= public_event_escape($errorMessage) ?></p><a class="btn btn-secondary" href="events.php">Return to Explore events</a></section>
@@ -73,25 +68,35 @@ $canVote = is_array($event)
           <li><span>Results</span><strong><?= (int) $event['has_public_results'] === 1 ? 'Public' : 'Not public yet' ?></strong></li>
         </ul>
         <div class="filter-row">
-          <?php if ($canVote): ?><a class="btn btn-primary" href="vote.php?event_id=<?= (int) $event['id'] ?>">Vote in this event</a><?php endif; ?>
           <?php if ($nominationOpen): ?><a class="btn btn-secondary" href="nominate.php?event=<?= (int) $event['id'] ?>">Nominate someone</a><?php endif; ?>
           <?php if ((int) $event['has_public_results'] === 1): ?><a class="btn btn-secondary" href="results.php?event_id=<?= (int) $event['id'] ?>">View results</a><?php endif; ?>
         </div>
       </section>
-      <div class="section-heading" style="margin-top:32px"><div><h2>Categories and nominees</h2><p>Active category and nominee records for this event.</p></div></div>
+      <div class="section-heading" style="margin-top:32px"><div><h2>Categories and nominees</h2><p>Explore each category and its nominees. Archived choices with votes remain visible for history.</p></div></div>
       <?php if ($categories === []): ?><section class="panel empty-state"><strong>No active categories yet</strong><p>Categories and nominees will be shown here when organizers add them.</p></section><?php endif; ?>
       <?php foreach ($categories as $category): ?>
-        <section class="panel" style="margin-bottom:16px">
-          <?php if (!empty($category['image_key'])): ?><img class="result-category-image" src="image.php?key=<?= rawurlencode((string) $category['image_key']) ?>" alt=""><?php endif; ?>
-          <h2><?= public_event_escape($category['name']) ?></h2>
-          <?php if (!empty($category['description'])): ?><p><?= nl2br(public_event_escape((string) $category['description'])) ?></p><?php endif; ?>
-          <?php if ($category['contestants'] === []): ?><p class="field-hint">No active nominees in this category yet.</p><?php else: ?>
-            <div class="contestant-grid"><?php foreach ($category['contestants'] as $contestant): ?>
-              <article class="contestant-card">
-                <?php if (!empty($contestant['image_key'])): ?><img class="result-person-image" src="image.php?key=<?= rawurlencode((string) $contestant['image_key']) ?>" alt=""><?php endif; ?>
-                <div class="contestant-body"><a class="table-primary" href="contestant.php?contestant_id=<?= (int) $contestant['id'] ?>"><?= public_event_escape($contestant['name']) ?></a>
-                  <?php if (!empty($contestant['biography'])): ?><p><?= public_event_escape((string) $contestant['biography']) ?></p><?php endif; ?>
+        <section class="category-showcase<?= $category['category_status'] === 'inactive' ? ' category-showcase-archived' : '' ?>" style="--category-color:<?= public_event_escape($category['category_color']) ?>">
+          <header class="category-showcase-header">
+            <?php if (!empty($category['image_key'])): ?><img class="category-showcase-image" src="image.php?key=<?= rawurlencode((string) $category['image_key']) ?>" alt="<?= public_event_escape($category['name']) ?> category"><?php endif; ?>
+            <div class="category-showcase-title">
+              <span class="category-index">CATEGORY</span>
+              <h2><?= public_event_escape($category['name']) ?></h2>
+              <?php if (!empty($category['description'])): ?><p><?= nl2br(public_event_escape((string) $category['description'])) ?></p><?php endif; ?>
+            </div>
+            <?php if ($category['category_status'] !== 'active'): ?><span class="category-status-badge">Archived</span><?php endif; ?>
+          </header>
+          <?php if ($category['contestants'] === []): ?><p class="field-hint category-empty-state">No active nominees in this category yet.</p><?php else: ?>
+            <div class="contestant-grid category-nominee-grid"><?php foreach ($category['contestants'] as $contestant): ?>
+              <article class="contestant-card nominee-showcase-card<?= $contestant['contestant_status'] !== 'active' ? ' nominee-showcase-archived' : '' ?>" style="--nominee-color:<?= public_event_escape((string) $contestant['nominee_color']) ?>">
+                <?php if (!empty($contestant['image_key'])): ?><img class="nominee-showcase-photo" src="image.php?key=<?= rawurlencode((string) $contestant['image_key']) ?>" alt="<?= public_event_escape($contestant['name']) ?>"><?php else: ?><div class="nominee-showcase-placeholder" aria-hidden="true">♙</div><?php endif; ?>
+                <div class="nominee-showcase-details">
+                  <?php if ($contestant['contestant_status'] !== 'active'): ?><span class="nominee-status-badge">No longer on ballot</span><?php endif; ?>
+                  <a class="nominee-showcase-name" href="contestant.php?contestant_id=<?= (int) $contestant['id'] ?>"><?= public_event_escape($contestant['name']) ?></a>
+                  <?php if (!empty($contestant['biography'])): ?><p><?= nl2br(public_event_escape((string) $contestant['biography'])) ?></p><?php endif; ?>
                   <?php if ((int) $event['has_public_results'] === 1): ?><small><?= number_format((int) $contestant['vote_count']) ?> public votes</small><?php endif; ?>
+                  <?php if ($canVote && $category['category_status'] === 'active' && $contestant['contestant_status'] === 'active'): ?>
+                    <a class="btn btn-primary btn-sm nominee-vote-action" href="vote.php?event_id=<?= (int) $event['id'] ?>&amp;category_id=<?= (int) $category['id'] ?>&amp;contestant_id=<?= (int) $contestant['id'] ?>">Vote for this nominee</a>
+                  <?php endif; ?>
                 </div>
               </article>
             <?php endforeach; ?></div>
@@ -100,10 +105,5 @@ $canVote = is_array($event)
       <?php endforeach; ?>
     <?php endif; ?>
   </div></main>
-  <script>
-    document.querySelector("[data-action='public-menu']")?.addEventListener("click", () => {
-      document.querySelector(".public-nav")?.classList.toggle("open");
-    });
-  </script>
 </body>
 </html>
